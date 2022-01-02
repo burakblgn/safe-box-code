@@ -1,1 +1,110 @@
+/*
+Project Name  : Strong Safe Box
+Revision Date : 02.01.2022
+Author        : Burak Bilgin
 
+Purpose       : Making a safe box in order to prevent damages from thefts and natural disasters
+
+System Input  :
+                 1) Keypad: To get buttons  
+System Output :
+                 1) LCD   : To inform the user while entering the password
+                 2) Servo : To adjust the position of the lock
+
+ */
+#include<Keypad.h>  
+#include <LiquidCrystal.h> // libraries
+#include<Servo.h>
+
+Servo servo;
+LiquidCrystal lcd(A0, A1, A2, A3, A4, A5); // LCD connections 
+
+char* passWord = "5619"; // safe's password
+
+int position = 0; // password's inital digit
+int wrong = 0;
+
+
+char keys[4][3] = {
+  {'1','2','3'},
+  {'4','5','6'},
+  {'7','8','9'},
+  {'*','0','#'}
+};
+
+byte rowPins[4] = {9,8,7,6}; // keypad connections
+byte colPins[3] = {5,4,3};   // keypad connections
+
+
+Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, 4, 3);
+
+void setup(){
+  Serial.begin(9600);
+  setLocked(true);
+  lcd.begin(16,2); // dimensions of LCD
+  servo.attach(10); // servo's pin number
+  servo.write(120); // servo's inital angle (also locked position angle)
+}
+
+void loop(){
+  char key = keypad.getKey();
+
+  Serial.println(key);
+
+  if((key >= '0' && key<= '9') || (key == '*' || key == '#'))
+  {
+    if(key == '*' || key == '#'){
+      
+      lcd.setCursor(0,0);
+      lcd.print("ENTER THE"); // prints the screen to enter a code by user
+      lcd.setCursor(0,1);
+      lcd.print("PASSWORD:");
+          
+      position = 0;
+      wrong = 0; // sets the servo's angle to locked position
+      setLocked(true);
+      }
+    else if(key == passWord[position]){
+       
+      position++; // checks password with password that entered by user 
+      wrong=0;
+      }
+    else if(key != passWord[position]){
+
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("PASSWORD"); // prints to the screen that the entered password is not correct  
+      lcd.setCursor(0,1);
+      lcd.print("IS INCORRECT"); 
+      
+      position=0;
+      setLocked(true);
+      wrong++;
+      }
+    if(position == 4){
+
+      setLocked(false);
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("PASSWORD"); // prints to the screen that the entered password is correct and sets the angle of servo
+      lcd.setCursor(0,1);
+      lcd.print("IS CORRECT");
+      }         
+}
+   delay(100);
+}
+
+void setLocked( int locked){
+  
+  if(locked){ // the function that sets the servo's angle
+
+    servo.write(120); // locked angle
+    }
+
+  else{
+    
+    delay(500);
+    servo.write(70); // unlocked angle
+    }
+  
+  }
